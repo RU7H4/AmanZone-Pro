@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8"><title>AmanZone Trading</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen bg-slate-50">
+    <aside class="w-full md:w-64 bg-slate-900 text-white p-6">
+        <h1 class="text-2xl font-bold text-amber-500 mb-8">AmanZone</h1>
+        <nav class="space-y-4">
+            <button onclick="render('All')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">📦 All Products</button>
+            <button onclick="render('1. የግንባታ ብረት')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">🔩 Steel / ብረት</button>
+            <button onclick="render('2. ቆርቆሮ')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">🏠 Roofing / ቆርቆሮ</button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 p-8">
+        <div class="flex justify-between mb-8">
+            <h2 id="catTitle" class="text-3xl font-bold">All Products</h2>
+            <button onclick="toggleCart()" class="bg-amber-500 px-6 py-2 rounded-lg font-bold">🛒 Cart (<span id="count">0</span>)</button>
+        </div>
+        <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </main>
+
+    <div id="cartPanel" class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl translate-x-full transition-transform p-6 z-50">
+        <div class="flex justify-between mb-4"><h3 class="font-bold">Your Order</h3><button onclick="toggleCart()">✕</button></div>
+        <div id="cartItems" class="space-y-2 mb-4"></div>
+        <form id="orderForm" class="space-y-2">
+            <input id="n" placeholder="Name" class="w-full border p-2" required>
+            <input id="p" placeholder="Phone" class="w-full border p-2" required>
+            <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded">Place Order</button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        
+        const firebaseConfig = { apiKey: "AIzaSyC8SsMUZYY465oloInKP-vCtOuSpLqSsDM", authDomain: "amanzone-trading.firebaseapp.com", projectId: "amanzone-trading" };
+        const db = getFirestore(initializeApp(firebaseConfig));
+        let products = []; let cart = [];
+
+        window.render = (cat) => {
+            const grid = document.getElementById('grid');
+            const filtered = cat === 'All' ? products : products.filter(p => p.category === cat);
+            grid.innerHTML = filtered.map(p => `
+                <div class="bg-white p-4 rounded shadow">
+                    <h3 class="font-bold">${p.name}</h3>
+                    <p class="text-amber-600">${p.price} ETB</p>
+                    <button onclick="addToCart('${p.name}', ${p.price})" class="mt-2 w-full bg-slate-800 text-white py-1 rounded">Add to Cart</button>
+                </div>
+            `).join('');
+        };
+
+        window.addToCart = (name, price) => {
+            cart.push({name, price});
+            document.getElementById('count').innerText = cart.length;
+            updateCartUI();
+            document.getElementById('cartPanel').classList.remove('translate-x-full');
+        };
+
+        function updateCartUI() {
+            document.getElementById('cartItems').innerHTML = cart.map(i => `<div class="text-sm border-b pb-1">${i.name} - ${i.price} ETB</div>`).join('');
+        }
+
+        window.toggleCart = () => document.getElementById('cartPanel').classList.toggle('translate-x-full');
+
+        document.getElementById('orderForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: document.getElementById('n').value,
+                    phone: document.getElementById('p').value,
+                    items: cart.map(i => i.name).join(", "),
+                    total: cart.reduce((s, i) => s + parseInt(i.price), 0)
+                })
+            });
+            if(res.ok) { alert("Order Sent!"); location.reload(); }
+        };
+
+        const snap = await getDocs(collection(db, "products"));
+        products = snap.docs.map(doc => doc.data());
+        render('All');
+    </script>
+</body>
+</html>
