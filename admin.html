@@ -1,59 +1,75 @@
 <!DOCTYPE html>
-<html>
-<head><title>AmanZone Admin</title><script src="https://cdn.tailwindcss.com"></script></head>
-<body class="bg-slate-100 p-6">
-    <div class="max-w-md mx-auto space-y-6">
-        <div class="bg-white p-8 rounded-2xl shadow-lg border-t-8 border-slate-900">
-            <h2 class="text-2xl font-black mb-6">Add Product</h2>
-            <form id="addForm" class="space-y-4">
-                <input id="n" placeholder="Product Name" class="w-full border p-3 rounded" required>
-                <select id="c" class="w-full border p-3 rounded">
-                    <option>1. የግንባታ ብረት</option>
-                    <option>2. ቆርቆሮ</option>
-                    <option>3. ጂብሰም ቦርድ</option>
-                </select>
-                <input id="p" type="number" placeholder="Price" class="w-full border p-3 rounded" required>
-                <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-slate-800">Save to Cloud</button>
-            </form>
-        </div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmanZone Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-8">
 
-        <div class="bg-red-50 p-6 rounded-2xl border border-red-200">
-            <h3 class="text-red-700 font-bold mb-2">Danger Zone</h3>
-            <button id="clearBtn" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700">Empty All Products</button>
-        </div>
+    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
+        <h1 class="text-2xl font-bold mb-6 text-slate-800">AmanZone Inventory Manager</h1>
+        
+        <form id="addForm" class="space-y-4">
+            <input id="n" placeholder="Product Name (e.g., 14mm Turkish Steel)" class="w-full border p-3 rounded" required>
+            <select id="c" class="w-full border p-3 rounded" required>
+                <option>1. የግንባታ ብረት</option>
+                <option>2. ቆርቆሮ</option>
+                <option>3. ጂብሰም ቦርድ</option>
+            </select>
+            <input id="p" type="number" placeholder="Price in ETB" class="w-full border p-3 rounded" required>
+            <input id="imgUrl" type="url" placeholder="Paste Image Link from Google" class="w-full border p-3 rounded">
+            
+            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-slate-800">
+                Save to Live Database
+            </button>
+        </form>
     </div>
 
     <script type="module">
-    // --- THE SECURITY LOCK ---
-    const pass = prompt("Enter AmanZone Admin Password:");
-    if (pass !== "AmanZone2026") { if (pass !== "MySecretPassword123") {
+        // --- THE SECURITY LOCK ---
+        const pass = prompt("Enter AmanZone Admin Password:");
+        if (pass !== "AmanZone2026") { 
+            document.body.innerHTML = "<h1 class='text-center mt-20 text-3xl text-red-600 font-bold'>Access Denied</h1>";
+            throw new Error("Unauthorized access");
+        }
 
-    }
-    // ... rest of your Firebase code continues here ...<script type="module">
+        // --- FIREBASE SETUP ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        
-        const firebaseConfig = { apiKey: "AIzaSyC8SsMUZYY465oloInKP-vCtOuSpLqSsDM", authDomain: "amanzone-trading.firebaseapp.com", projectId: "amanzone-trading" };
-        const db = getFirestore(initializeApp(firebaseConfig));
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // ADD LOGIC
-        document.getElementById('addForm').onsubmit = async (e) => {
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8SsMUZYY465oloInKP-vCtOuSpLqSsDM",
+            authDomain: "amanzone-trading.firebaseapp.com",
+            projectId: "amanzone-trading"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- SAVE TO DATABASE ---
+        document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, "products"), {
-                name: document.getElementById('n').value,
-                category: document.getElementById('c').value,
-                price: document.getElementById('p').value
-            });
-            alert("Product Added!"); location.reload();
-        };
-
-        // CLEAR LOGIC
-        document.getElementById('clearBtn').onclick = async () => {
-            if(!confirm("Are you sure? This deletes everything!")) return;
-            const snap = await getDocs(collection(db, "products"));
-            snap.forEach(async (d) => await deleteDoc(doc(db, "products", d.id)));
-            alert("Database Cleared!"); location.reload();
-        };
+            const btn = e.target.querySelector('button');
+            btn.innerText = "Saving...";
+            
+            try {
+                await addDoc(collection(db, "products"), {
+                    name: document.getElementById('n').value,
+                    category: document.getElementById('c').value,
+                    price: document.getElementById('p').value,
+                    image: document.getElementById('imgUrl').value || "No Image"
+                });
+                alert("✅ Product Added Successfully!");
+                e.target.reset();
+            } catch (error) {
+                alert("❌ Error saving product.");
+                console.error(error);
+            } finally {
+                btn.innerText = "Save to Live Database";
+            }
+        });
     </script>
 </body>
 </html>

@@ -23,7 +23,7 @@ app.use(express.static(__dirname));
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const MY_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-// Helper to send messages back to you
+// Helper to send messages back to Telegram
 async function sendBotReply(text) {
     try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -36,7 +36,7 @@ async function sendBotReply(text) {
     }
 }
 
-// --- 1. THE CHECKOUT ROUTE (From your website) ---
+// --- ROUTE 1: THE CHECKOUT (From amanzone.com) ---
 app.post('/api/checkout', async (req, res) => {
     try {
         const { name, phone, address, items, total } = req.body;
@@ -48,31 +48,28 @@ app.post('/api/checkout', async (req, res) => {
     }
 });
 
-// --- 2. THE ADMIN BOT ROUTE (From your phone) ---
+// --- ROUTE 2: THE ADMIN BOT (From your phone) ---
 app.post('/api/bot', async (req, res) => {
-    res.sendStatus(200); // Tell Telegram "Message Received" instantly
+    res.sendStatus(200); 
 
     const msg = req.body.message;
-    if (!msg || !msg.text) return; // Ignore images/edits for now
+    if (!msg || !msg.text) return; 
 
     const chatId = msg.chat.id.toString();
     const text = msg.text.trim();
 
-    // 🔍 X-RAY LOGS FOR RENDER 
     console.log(`[WEBHOOK] Incoming message from Chat ID: ${chatId}`);
     console.log(`[WEBHOOK] Your Server expects ID:     ${MY_CHAT_ID}`);
     console.log(`[WEBHOOK] You typed: ${text}`);
 
-    // SECURITY CHECK
     if (chatId !== MY_CHAT_ID) {
-        console.log(`[WEBHOOK] ❌ BLOCKED: The Chat IDs do not match!`);
+        console.log(`[WEBHOOK] ❌ BLOCKED: Chat IDs do not match!`);
         return;
     }
 
     if (text.startsWith('/add')) {
         console.log("[WEBHOOK] Processing /add command...");
         try {
-            // Cut out the "/add " part and split by commas
             const rawString = text.substring(4).trim(); 
             const rawData = rawString.split(',');
 
