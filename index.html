@@ -91,6 +91,26 @@
             updateCartUI();
             document.getElementById('cartPanel').classList.remove('translate-x-full');
         };
+<section id="checkout-container">
+    <h2>Your Order Summary</h2>
+    
+    <div class="cart-items">
+        </div>
+
+    <div class="totals">
+        <p>Subtotal: <span id="subtotal">0.00 ETB</span></p>
+        <p>Delivery: <span id="delivery">150.00 ETB</span></p>
+        <hr>
+        <h3>Total: <span id="grand-total">0.00 ETB</span></h3>
+    </div>
+
+    <div class="payment-actions">
+        <button type="button" id="pay-button" onclick="payWithChapa()">
+            Pay Now with Telebirr / CBE Birr
+        </button>
+    </div>
+</section>
+
 
         function updateCartUI() {
             document.getElementById('cartItems').innerHTML = cart.map(i => `<div class="text-sm border-b pb-1">${i.name} - ${i.price} ETB</div>`).join('');
