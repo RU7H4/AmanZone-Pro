@@ -1,15 +1,10 @@
 {
-  "name": "amanzone-pro",
+  "name": "amanzone-backend",
   "version": "1.0.0",
-  "description": "AmanZone E-commerce Platform",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
   "dependencies": {
-    "cors": "^2.8.5",
+    "axios": "^1.6.0",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "firebase": "^10.8.1"
+    "express": "^4.18.2"
   }
 }
