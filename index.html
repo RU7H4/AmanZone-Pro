@@ -2,103 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AmanZone | Construction Supplies</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-</head>
-<body>
-    <header>
-        <h1>AmanZone Construction</h1>
-        <div id="cart-count">Items: 0</div>
-    </header>
-
-    <main id="product-grid">
-        </main>
-
-    <div id="checkout-modal" style="display:none; margin-top: 2rem; padding: 1rem; border-top: 2px solid #333;">
-        <h3>Checkout</h3>
-        <input type="text" id="cust-name" placeholder="Full Name" required>
-        <input type="text" id="cust-phone" placeholder="Phone Number" required>
-        <button onclick="submitOrder()">Place Order</button>
-    </div>
-
-    <script>
-        // --- 1. FIREBASE CONFIG (Paste your keys here) ---
-        const firebaseConfig = { 
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        let cart = [];
-        let cartTotal = 0;
-
-        // --- 2. LOAD PRODUCTS ---
-        db.ref('products').on('value', (snapshot) => {
-            const products = snapshot.val();
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
-            for (let id in products) {
-                grid.innerHTML += `
-                    <div class="card" style="border:1px solid #ccc; padding:15px; margin:10px; display:inline-block;">
-                        <h3>${products[id].name}</h3>
-                        <p>${products[id].price} ETB</p>
-                        <button onclick="addToCart('${id}', '${products[id].name}', ${products[id].price})">Add to Cart</button>
-                    </div>`;
-            }
-        });
-
-        // --- 3. CART LOGIC ---
-        function addToCart(id, name, price) {
-            cart.push({ id, name, price, qty: 1 });
-            cartTotal += parseFloat(price);
-            document.getElementById('cart-count').innerText = `Items: ${cart.length}`;
-            document.getElementById('checkout-modal').style.display = 'block';
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Modern, professional styling built directly in */
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f8fafc;
+            --text-main: #0f172a;
+            --card-bg: #ffffff;
         }
 
-        // --- 4. CHECKOUT LOGIC ---
-        async function submitOrder() {
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-
-            if(!name || !phone) return alert("Please fill out your details.");
-
-            const orderPayload = {
-                items: cart,
-                total: cartTotal,
-                customerInfo: { name, phone, address: "Addis Ababa" } 
-            };
-
-            try {
-                const response = await fetch('/api/checkout', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderPayload)
-                });
-
-                if (response.ok) {
-                    alert('Order successfully placed!');
-                    cart = []; 
-                    cartTotal = 0;
-                    document.getElementById('checkout-modal').style.display = 'none';
-                    document.getElementById('cart-count').innerText = `Items: 0`;
-                    document.getElementById('cust-name').value = '';
-                    document.getElementById('cust-phone').value = '';
-                } else {
-                    alert('Failed to place order.');
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Server error.');
-            }
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            /* Subtle diagonal step-and-repeat background pattern for a textured look */
+            background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 12px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-    </script>
-</body>
-</html>
+
+        header {
+            background: var(--card-bg);
+            padding: 1rem 5%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight:
