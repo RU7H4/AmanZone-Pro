@@ -1,11 +1,25 @@
 require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
+const path = require('path'); // Added path module
 const app = express();
 
 app.use(express.json());
-// Serves your HTML files from a folder named 'public'
-app.use(express.static('public'));
+
+// --- SERVE HTML FILES DIRECTLY FROM ROOT FOLDER ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/Admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'Admin.html'));
+});
+
+// Serve style.css if you have one in the same folder
+app.get('/style.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'style.css'));
+});
+// --------------------------------------------------
 
 const TELEGRAM_BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.ADMIN_ID;
