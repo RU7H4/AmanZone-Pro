@@ -1,141 +1,104 @@
 <!DOCTYPE html>
-<html lang="am">
+<html lang="en">
 <head>
-  <script src="https://api.chapa.co/v1/inline.js"></script>
-
-  <meta charset="UTF-8"><title>AmanZone Trading</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          builderOrange: '#FF5A1F', // High visibility for calls to action
-          safetyYellow: '#FFD700',  // Construction theme accent
-          steelGray: '#4A5568',     // Professional, heavy text
-          concrete: '#F7FAFC'       // Clean background
-        }
-      }
-    }
-  }
-</script>
+    <meta charset="UTF-8">
+    <title>AmanZone | Construction Supplies</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 </head>
-<body <div class="bg-concrete min-h-screen p-4">
-  <nav class="bg-white shadow-md rounded-lg p-4 flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-black text-steelGray tracking-tight">Aman<span class="text-builderOrange">Zone</span></h1>
-    <button class="bg-builderOrange text-white px-4 py-2 rounded font-bold shadow hover:bg-orange-600 transition">Cart (0)</button>
-  </nav>
+<body>
+    <header>
+        <h1>AmanZone Construction</h1>
+        <div id="cart-count">Items: 0</div>
+    </header>
 
-  <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 max-w-sm">
-    <div class="h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400">Image Placeholder</div>
-    <h2 class="text-lg font-bold text-gray-800">Portland Cement - 50kg</h2>
-    <p class="text-sm text-gray-500 mb-4">Heavy-duty construction cement.</p>
-    <div class="flex justify-between items-center">
-      <span class="text-xl font-black text-steelGray">ETB 1,200</span>
-      <button class="bg-safetyYellow text-black px-4 py-2 rounded font-bold hover:bg-yellow-500 transition">Add</button>
-    </div>
-  </div>
-</div>
- class="flex flex-col md:flex-row min-h-screen bg-slate-50">
-    <aside class="w-full md:w-64 bg-slate-900 text-white p-6">
-        <h1 class="text-2xl font-bold text-amber-500 mb-8">AmanZone</h1>
-        <nav class="space-y-4">
-            <button onclick="render('All')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">📦 All Products</button>
-            <button onclick="render('1. የግንባታ ብረት')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">🔩 Steel / ብረት</button>
-            <button onclick="render('2. ቆርቆሮ')" class="block w-full text-left p-2 hover:bg-slate-800 rounded">🏠 Roofing / ቆርቆሮ</button>
-        </nav>
-    </aside>
+    <main id="product-grid">
+        </main>
 
-    <main class="flex-1 p-8">
-        <div class="flex justify-between mb-8">
-            <h2 id="catTitle" class="text-3xl font-bold">All Products</h2>
-            <button onclick="toggleCart()" class="bg-amber-500 px-6 py-2 rounded-lg font-bold">🛒 Cart (<span id="count">0</span>)</button>
-        </div>
-        <div id="grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-    </main>
-
-    <div id="cartPanel" class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl translate-x-full transition-transform p-6 z-50">
-        <div class="flex justify-between mb-4"><h3 class="font-bold">Your Order</h3><button onclick="toggleCart()">✕</button></div>
-        <div id="cartItems" class="space-y-2 mb-4"></div>
-        <form id="orderForm" class="space-y-2">
-            <input id="n" placeholder="Name" class="w-full border p-2" required>
-            <input id="p" placeholder="Phone" class="w-full border p-2" required>
-            <button type="submit" class="w-full bg-slate-900 text-white py-3 rounded">Place Order</button>
-        </form>
+    <div id="checkout-modal" style="display:none; margin-top: 2rem; padding: 1rem; border-top: 2px solid #333;">
+        <h3>Checkout</h3>
+        <input type="text" id="cust-name" placeholder="Full Name" required>
+        <input type="text" id="cust-phone" placeholder="Phone Number" required>
+        <button onclick="submitOrder()">Place Order</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        
-        const firebaseConfig = { apiKey: "AIzaSyC8SsMUZYY465oloInKP-vCtOuSpLqSsDM", authDomain: "amanzone-trading.firebaseapp.com", projectId: "amanzone-trading" };
-        const db = getFirestore(initializeApp(firebaseConfig));
-        let products = []; let cart = [];
-
-        window.render = (cat) => {
-            const grid = document.getElementById('grid');
-            const filtered = cat === 'All' ? products : products.filter(p => p.category === cat);
-            grid.innerHTML = filtered.map(p => `
-                <div class="bg-white p-4 rounded shadow">
-                    <h3 class="font-bold">${p.name}</h3>
-                    <p class="text-amber-600">${p.price} ETB</p>
-                    <button onclick="addToCart('${p.name}', ${p.price})" class="mt-2 w-full bg-slate-800 text-white py-1 rounded">Add to Cart</button>
-                </div>
-            `).join('');
+    <script>
+        // --- 1. FIREBASE CONFIG (Paste your keys here) ---
+        const firebaseConfig = { 
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        window.addToCart = (name, price) => {
-            cart.push({name, price});
-            document.getElementById('count').innerText = cart.length;
-            updateCartUI();
-            document.getElementById('cartPanel').classList.remove('translate-x-full');
-        };
-<section id="checkout-container">
-    <h2>Your Order Summary</h2>
-    
-    <div class="cart-items">
-        </div>
+        let cart = [];
+        let cartTotal = 0;
 
-    <div class="totals">
-        <p>Subtotal: <span id="subtotal">0.00 ETB</span></p>
-        <p>Delivery: <span id="delivery">150.00 ETB</span></p>
-        <hr>
-        <h3>Total: <span id="grand-total">0.00 ETB</span></h3>
-    </div>
+        // --- 2. LOAD PRODUCTS ---
+        db.ref('products').on('value', (snapshot) => {
+            const products = snapshot.val();
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            for (let id in products) {
+                grid.innerHTML += `
+                    <div class="card" style="border:1px solid #ccc; padding:15px; margin:10px; display:inline-block;">
+                        <h3>${products[id].name}</h3>
+                        <p>${products[id].price} ETB</p>
+                        <button onclick="addToCart('${id}', '${products[id].name}', ${products[id].price})">Add to Cart</button>
+                    </div>`;
+            }
+        });
 
-    <div class="payment-actions">
-        <button type="button" id="pay-button" onclick="payWithChapa()">
-            Pay Now with Telebirr / CBE Birr
-        </button>
-    </div>
-</section>
-
-
-        function updateCartUI() {
-            document.getElementById('cartItems').innerHTML = cart.map(i => `<div class="text-sm border-b pb-1">${i.name} - ${i.price} ETB</div>`).join('');
+        // --- 3. CART LOGIC ---
+        function addToCart(id, name, price) {
+            cart.push({ id, name, price, qty: 1 });
+            cartTotal += parseFloat(price);
+            document.getElementById('cart-count').innerText = `Items: ${cart.length}`;
+            document.getElementById('checkout-modal').style.display = 'block';
         }
 
-        window.toggleCart = () => document.getElementById('cartPanel').classList.toggle('translate-x-full');
+        // --- 4. CHECKOUT LOGIC ---
+        async function submitOrder() {
+            const name = document.getElementById('cust-name').value;
+            const phone = document.getElementById('cust-phone').value;
 
-        document.getElementById('orderForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const res = await fetch('/api/checkout', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    name: document.getElementById('n').value,
-                    phone: document.getElementById('p').value,
-                    items: cart.map(i => i.name).join(", "),
-                    total: cart.reduce((s, i) => s + parseInt(i.price), 0)
-                })
-            });
-            if(res.ok) { alert("Order Sent!"); location.reload(); }
-        };
+            if(!name || !phone) return alert("Please fill out your details.");
 
-        const snap = await getDocs(collection(db, "products"));
-        products = snap.docs.map(doc => doc.data());
-        render('All');
+            const orderPayload = {
+                items: cart,
+                total: cartTotal,
+                customerInfo: { name, phone, address: "Addis Ababa" } 
+            };
+
+            try {
+                const response = await fetch('/api/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderPayload)
+                });
+
+                if (response.ok) {
+                    alert('Order successfully placed!');
+                    cart = []; 
+                    cartTotal = 0;
+                    document.getElementById('checkout-modal').style.display = 'none';
+                    document.getElementById('cart-count').innerText = `Items: 0`;
+                    document.getElementById('cust-name').value = '';
+                    document.getElementById('cust-phone').value = '';
+                } else {
+                    alert('Failed to place order.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Server error.');
+            }
+        }
     </script>
 </body>
 </html>
