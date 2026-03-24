@@ -3,73 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmanZone Admin</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 p-8">
-
-    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
-        <h1 class="text-2xl font-bold mb-6 text-slate-800">AmanZone Inventory Manager</h1>
-        
-        <form id="addForm" class="space-y-4">
-            <input id="n" placeholder="Product Name (e.g., 14mm Turkish Steel)" class="w-full border p-3 rounded" required>
-            <select id="c" class="w-full border p-3 rounded" required>
-                <option>1. የግንባታ ብረት</option>
-                <option>2. ቆርቆሮ</option>
-                <option>3. ጂብሰም ቦርድ</option>
-            </select>
-            <input id="p" type="number" placeholder="Price in ETB" class="w-full border p-3 rounded" required>
-            <input id="imgUrl" type="url" placeholder="Paste Image Link from Google" class="w-full border p-3 rounded">
-            
-            <button type="submit" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-slate-800">
-                Save to Live Database
-            </button>
-        </form>
-    </div>
-
-    <script type="module">
-        // --- THE SECURITY LOCK ---
-        const pass = prompt("Enter AmanZone Admin Password:");
-        if (pass !== "AmanZone2026") { 
-            document.body.innerHTML = "<h1 class='text-center mt-20 text-3xl text-red-600 font-bold'>Access Denied</h1>";
-            throw new Error("Unauthorized access");
+    <title>AmanZone | Admin Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --neon-blue: #0ea5e9;
+            --neon-green: #10b981;
+            --neon-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
 
-        // --- FIREBASE SETUP ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        body {
+            margin: 0;
+            padding: 2rem;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.01) 0px, rgba(255,255,255,0.01) 2px, transparent 2px, transparent 12px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC8SsMUZYY465oloInKP-vCtOuSpLqSsDM",
-            authDomain: "amanzone-trading.firebaseapp.com",
-            projectId: "amanzone-trading"
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-card.sales { border-top: 3px solid var(--neon-blue); }
+        .metric-card.profit { border-top: 3px solid var(--neon-green); }
+        .metric-card.margin { border-top: 3px solid #8b5cf6; }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .controls-section {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-add {
+            background: linear-gradient(45deg, var(--neon-blue), #2563eb);
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-add:hover {
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.6);
+            transform: scale(1.02);
+        }
+
+        .btn-danger {
+            background: transparent;
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            width: 100%;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <h2>AmanZone System_Admin</h2>
+
+    <div class="dashboard-container">
+        
+        <div class="metrics-grid">
+            <div class="metric-card sales">
+                <div class="metric-title">Total Sales (ETB)</div>
+                <div class="metric-value" style="color: var(--neon-blue);" id="stat-sales">0</div>
+            </div>
+            <div class="metric-card profit">
+                <div class="metric-title">Net Profit (ETB)</div>
+                <div class="metric-value" style="color: var(--neon-green);" id="stat-profit">0</div>
+            </div>
+            <div class="metric-card margin">
+                <div class="metric-title">Avg Margin</div>
+                <div class="metric-value" style="color: #8b5cf6;" id="stat-margin">0%</div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <form id="add-product">
+                <input type="text" id="p-name" placeholder="Item Name (e.g. Rebar 12mm)" required>
+                <input type="number" id="p-price" placeholder="Unit Price (ETB)" required>
+                <button type="submit" class="btn-add">Inject Product</button>
+            </form>
+            
+            <button onclick="clearAllProducts()" class="btn-danger">Purge All Inventory Data</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. FIREBASE CONFIG (Paste your keys here) ---
+        const firebaseConfig = { 
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- 2. INVENTORY MANAGEMENT ---
+        document.getElementById('add-product').onsubmit = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('p-name').value;
+            const price = document.getElementById('p-price').value;
+            
+            db.ref('products').push({ name, price })
+              .then(() => {
+                  alert(`Success: ${name} added to databank.`);
+                  document.getElementById('add-product').reset();
+              });
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // --- SAVE TO DATABASE ---
-        document.getElementById('addForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            btn.innerText = "Saving...";
-            
-            try {
-                await addDoc(collection(db, "products"), {
-                    name: document.getElementById('n').value,
-                    category: document.getElementById('c').value,
-                    price: document.getElementById('p').value,
-                    image: document.getElementById('imgUrl').value || "No Image"
-                });
-                alert("✅ Product Added Successfully!");
-                e.target.reset();
-            } catch (error) {
-                alert("❌ Error saving product.");
-                console.error(error);
-            } finally {
-                btn.innerText = "Save to Live Database";
+        function clearAllProducts() {
+            if(confirm("WARNING: Are you sure you want to permanently delete all products?")) {
+                db.ref('products').remove();
+                alert("Inventory databank cleared.");
             }
-        });
+        }
+
+        // --- 3. DASHBOARD ANIMATIONS ---
+        function animateValue(id, start, end, duration, prefix = "", suffix = "") {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentVal = Math.floor(easeOut * (end - start) + start);
+                
+                obj.innerHTML = prefix + currentVal.toLocaleString() + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Runs mock data animation on page load
+        window.onload = () => {
+            animateValue("stat-sales", 0, 845200, 2000);        
+            animateValue("stat-profit", 0, 152136, 2500);       
+            animateValue("stat-margin", 0, 18, 3000, "", "%");  
+        };
     </script>
 </body>
 </html>
